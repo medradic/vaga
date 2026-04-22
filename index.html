@@ -2,75 +2,86 @@
 <html lang="sr">
 <head>
 <meta charset="UTF-8">
-<title>LEP Pro Viewer</title>
+<title>LEP Viewer</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
 
 <style>
 body {
   font-family: Arial;
-  margin: 20px;
-  background: #0b0f14;
+  background: #0d1117;
   color: #e6edf3;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+.card {
+  background: #161b22;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 15px;
 }
 
 h2 {
-  margin-bottom: 10px;
+  margin-top: 0;
 }
 
 .controls {
-  margin: 15px 0;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
 label {
-  background: #161b22;
+  background: #21262d;
   padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
 }
 
-canvas {
-  background: #11161c;
-  border-radius: 10px;
-  padding: 10px;
+input[type="file"] {
+  margin-bottom: 10px;
 }
 
-button {
-  background: #238636;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  color: white;
-  cursor: pointer;
+canvas {
+  background: #0d1117;
+  border-radius: 10px;
+  padding: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📊 LEP Pro Viewer</h2>
+<div class="container">
 
-<input type="file" id="fileInput">
+<div class="card">
+  <h2>📊 LEP Viewer</h2>
+  <input type="file" id="fileInput">
 
-<div class="controls">
-  <label><input type="checkbox" id="w1" checked> W1</label>
-  <label><input type="checkbox" id="w2"> W2</label>
-  <label><input type="checkbox" id="e1"> E1</label>
-  <label><input type="checkbox" id="e2"> E2</label>
-  <label><input type="checkbox" id="temp" checked> Temp</label>
-  <label><input type="checkbox" id="volt" checked> Volt</label>
-
-  <button onclick="resetZoom()">Reset Zoom</button>
+  <div class="controls">
+    <label><input type="checkbox" id="w1" checked> Težina1</label>
+    <label><input type="checkbox" id="e1"> Greška1</label>
+    <label><input type="checkbox" id="w2"> Težina2</label>
+    <label><input type="checkbox" id="e2"> Greška2</label>
+    <label><input type="checkbox" id="temp" checked> Temperatura</label>
+    <label><input type="checkbox" id="volt" checked> Napon</label>
+  </div>
 </div>
 
-<canvas id="chart"></canvas>
+<div class="card">
+  <canvas id="chart"></canvas>
+</div>
+
+</div>
 
 <script>
-let chart;
+let chart = null;
 
 document.getElementById('fileInput').addEventListener('change', handleFile);
 
@@ -97,9 +108,12 @@ function parseData(text) {
       if (p.length < 7) return;
 
       const v = [
-        parseFloat(p[1]), parseFloat(p[2].replace("+/-","")),
-        parseFloat(p[3]), parseFloat(p[4].replace("+/-","")),
-        parseFloat(p[5]), parseFloat(p[6])
+        parseFloat(p[1]),
+        parseFloat(p[2].replace("+/-","")),
+        parseFloat(p[3]),
+        parseFloat(p[4].replace("+/-","")),
+        parseFloat(p[5]),
+        parseFloat(p[6])
       ];
 
       if (v.some(x => isNaN(x))) return;
@@ -118,33 +132,33 @@ function parseData(text) {
   drawChart(times, w1, e1, w2, e2, temp, volt);
 }
 
-function ds(label, data, color, id) {
+function ds(label, data, color, visible) {
   return {
     label,
     data,
     borderColor: color,
     borderWidth: 2,
-    pointRadius: 0,
+    pointRadius: 1,
     tension: 0.25,
-    hidden: !document.getElementById(id).checked
+    hidden: !visible
   };
 }
 
-function drawChart(t, w1, e1, w2, e2, temp, volt) {
+function drawChart(times, w1, e1, w2, e2, temp, volt) {
 
   if (chart) chart.destroy();
 
-  chart = new Chart(chartCanvas, {
+  chart = new Chart(document.getElementById('chart'), {
     type: 'line',
     data: {
-      labels: t,
+      labels: times,
       datasets: [
-        ds("Weight 1", w1, "#00e5ff", "w1"),
-        ds("Error 1", e1, "#2979ff", "e1"),
-        ds("Weight 2", w2, "#ff9100", "w2"),
-        ds("Error 2", e2, "#aa00ff", "e2"),
-        ds("Temp (C)", temp, "#ff5252", "temp"),
-        ds("Volt (V)", volt, "#00e676", "volt")
+        ds("Težina1", w1, "#00e5ff", document.getElementById("w1").checked),
+        ds("Greška1", e1, "#2979ff", document.getElementById("e1").checked),
+        ds("Težina2", w2, "#ff9100", document.getElementById("w2").checked),
+        ds("Greška2", e2, "#aa00ff", document.getElementById("e2").checked),
+        ds("Temperatura", temp, "#ff5252", document.getElementById("temp").checked),
+        ds("Napon", volt, "#00e676", document.getElementById("volt").checked)
       ]
     },
     options: {
@@ -153,33 +167,11 @@ function drawChart(t, w1, e1, w2, e2, temp, volt) {
         mode: 'index',
         intersect: false
       },
-
       plugins: {
         legend: {
           labels: { color: "#ccc" }
-        },
-
-        tooltip: {
-          backgroundColor: "#111",
-          borderColor: "#444",
-          borderWidth: 1,
-          titleColor: "#fff",
-          bodyColor: "#ddd"
-        },
-
-        zoom: {
-          pan: {
-            enabled: true,
-            mode: 'x'
-          },
-          zoom: {
-            wheel: { enabled: true },
-            pinch: { enabled: true },
-            mode: 'x'
-          }
         }
       },
-
       scales: {
         x: {
           ticks: { color: "#aaa", maxTicksLimit: 10 }
@@ -192,26 +184,20 @@ function drawChart(t, w1, e1, w2, e2, temp, volt) {
   });
 }
 
-// toggle
+// FIXED toggle (bez bug-a)
 document.querySelectorAll("input[type=checkbox]").forEach(cb => {
   cb.addEventListener("change", () => {
     if (!chart) return;
 
-    chart.data.datasets[0].hidden = !w1.checked;
-    chart.data.datasets[1].hidden = !e1.checked;
-    chart.data.datasets[2].hidden = !w2.checked;
-    chart.data.datasets[3].hidden = !e2.checked;
-    chart.data.datasets[4].hidden = !temp.checked;
-    chart.data.datasets[5].hidden = !volt.checked;
+    const ids = ["w1","e1","w2","e2","temp","volt"];
+
+    ids.forEach((id, i) => {
+      chart.data.datasets[i].hidden = !document.getElementById(id).checked;
+    });
 
     chart.update();
   });
 });
-
-// reset zoom
-function resetZoom() {
-  if (chart) chart.resetZoom();
-}
 </script>
 
 </body>
