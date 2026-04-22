@@ -9,8 +9,8 @@
 <style>
 body {
   font-family: Arial;
-  background: #0d1117;
-  color: #e6edf3;
+  background: #f5f7fa;
+  color: #222;
   margin: 0;
   padding: 20px;
 }
@@ -21,10 +21,11 @@ body {
 }
 
 .card {
-  background: #161b22;
+  background: #ffffff;
   padding: 15px;
   border-radius: 10px;
   margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 h2 {
@@ -38,10 +39,11 @@ h2 {
 }
 
 label {
-  background: #21262d;
+  background: #eef2f7;
   padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
+  border: 1px solid #d0d7de;
 }
 
 input[type="file"] {
@@ -49,7 +51,7 @@ input[type="file"] {
 }
 
 canvas {
-  background: #0d1117;
+  background: #ffffff;
   border-radius: 10px;
   padding: 10px;
 }
@@ -153,12 +155,12 @@ function drawChart(times, w1, e1, w2, e2, temp, volt) {
     data: {
       labels: times,
       datasets: [
-        ds("Težina1", w1, "#00e5ff", document.getElementById("w1").checked),
-        ds("Greška1", e1, "#2979ff", document.getElementById("e1").checked),
-        ds("Težina2", w2, "#ff9100", document.getElementById("w2").checked),
-        ds("Greška2", e2, "#aa00ff", document.getElementById("e2").checked),
-        ds("Temperatura", temp, "#ff5252", document.getElementById("temp").checked),
-        ds("Napon", volt, "#00e676", document.getElementById("volt").checked)
+        ds("Težina1", w1, "#0077b6", document.getElementById("w1").checked),
+        ds("Greška1", e1, "#90caf9", document.getElementById("e1").checked),
+        ds("Težina2", w2, "#ef6c00", document.getElementById("w2").checked),
+        ds("Greška2", e2, "#ba68c8", document.getElementById("e2").checked),
+        ds("Temperatura", temp, "#d32f2f", document.getElementById("temp").checked),
+        ds("Napon", volt, "#2e7d32", document.getElementById("volt").checked)
       ]
     },
     options: {
@@ -169,22 +171,22 @@ function drawChart(times, w1, e1, w2, e2, temp, volt) {
       },
       plugins: {
         legend: {
-          labels: { color: "#ccc" }
+          labels: { color: "#333" }
         }
       },
       scales: {
         x: {
-          ticks: { color: "#aaa", maxTicksLimit: 10 }
+          ticks: { color: "#555", maxTicksLimit: 10 }
         },
         y: {
-          ticks: { color: "#aaa" }
+          ticks: { color: "#555" }
         }
       }
     }
   });
 }
 
-// FIXED toggle (bez bug-a)
+// toggle
 document.querySelectorAll("input[type=checkbox]").forEach(cb => {
   cb.addEventListener("change", () => {
     if (!chart) return;
