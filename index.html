@@ -78,6 +78,7 @@ canvas {
 
 <script>
 let chart = null;
+let savedData = null;
 
 document.getElementById('fileInput').addEventListener('change', handleFile);
 
@@ -125,7 +126,9 @@ function parseData(text) {
     } catch {}
   });
 
-  drawChart(times, w1, e1, w2, e2, temp, volt);
+  savedData = { times, w1, e1, w2, e2, temp, volt };
+
+  drawChart();
 }
 
 function ds(label, data, color, visible, yAxisID=null) {
@@ -141,9 +144,12 @@ function ds(label, data, color, visible, yAxisID=null) {
   };
 }
 
-function drawChart(times, w1, e1, w2, e2, temp, volt) {
+function drawChart() {
 
+  if (!savedData) return;
   if (chart) chart.destroy();
+
+  const { times, w1, e1, w2, e2, temp, volt } = savedData;
 
   const all = [
     {id:"w1", label:"Težina1", data:w1, color:"#0077b6"},
@@ -162,7 +168,7 @@ function drawChart(times, w1, e1, w2, e2, temp, volt) {
   };
 
   if (active.length === 2) {
-    // 🔥 DVA PARAMETRA → SVAKI SVOJA OSA
+    // 👉 TAČNO 2 → dual axis
     datasets = [
       ds(active[0].label, active[0].data, active[0].color, true, "y1"),
       ds(active[1].label, active[1].data, active[1].color, true, "y2")
@@ -182,7 +188,7 @@ function drawChart(times, w1, e1, w2, e2, temp, volt) {
     };
 
   } else {
-    // 🔥 3+ → STANDARDNO (kao pre)
+    // 👉 1 ili 3+ → standardno
     datasets = all.map(d =>
       ds(d.label, d.data, d.color, document.getElementById(d.id).checked)
     );
@@ -216,12 +222,7 @@ function drawChart(times, w1, e1, w2, e2, temp, volt) {
 
 // toggle
 document.querySelectorAll("input[type=checkbox]").forEach(cb => {
-  cb.addEventListener("change", () => {
-    if (!chart) return;
-
-    // samo ponovo nacrtaj (ključno!)
-    document.getElementById('fileInput').dispatchEvent(new Event('change'));
-  });
+  cb.addEventListener("change", drawChart);
 });
 </script>
 
