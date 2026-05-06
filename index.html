@@ -28,9 +28,7 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-h2 {
-  margin-top: 0;
-}
+h2 { margin-top: 0; }
 
 .controls {
   display: flex;
@@ -44,10 +42,6 @@ label {
   border-radius: 6px;
   cursor: pointer;
   border: 1px solid #d0d7de;
-}
-
-input[type="file"] {
-  margin-bottom: 10px;
 }
 
 canvas {
@@ -134,7 +128,7 @@ function parseData(text) {
   drawChart(times, w1, e1, w2, e2, temp, volt);
 }
 
-function ds(label, data, color, visible) {
+function ds(label, data, color, visible, yAxisID=null) {
   return {
     label,
     data,
@@ -142,7 +136,8 @@ function ds(label, data, color, visible) {
     borderWidth: 2,
     pointRadius: 1,
     tension: 0.25,
-    hidden: !visible
+    hidden: !visible,
+    yAxisID
   };
 }
 
@@ -150,18 +145,58 @@ function drawChart(times, w1, e1, w2, e2, temp, volt) {
 
   if (chart) chart.destroy();
 
+  const all = [
+    {id:"w1", label:"Težina1", data:w1, color:"#0077b6"},
+    {id:"e1", label:"Greška1", data:e1, color:"#90caf9"},
+    {id:"w2", label:"Težina2", data:w2, color:"#ef6c00"},
+    {id:"e2", label:"Greška2", data:e2, color:"#ba68c8"},
+    {id:"temp", label:"Temperatura", data:temp, color:"#d32f2f"},
+    {id:"volt", label:"Napon", data:volt, color:"#2e7d32"}
+  ];
+
+  const active = all.filter(d => document.getElementById(d.id).checked);
+
+  let datasets = [];
+  let scales = {
+    x: { ticks: { color: "#555", maxTicksLimit: 10 } }
+  };
+
+  if (active.length === 2) {
+    // 🔥 DVA PARAMETRA → SVAKI SVOJA OSA
+    datasets = [
+      ds(active[0].label, active[0].data, active[0].color, true, "y1"),
+      ds(active[1].label, active[1].data, active[1].color, true, "y2")
+    ];
+
+    scales.y1 = {
+      type: 'linear',
+      position: 'left',
+      ticks: { color: active[0].color }
+    };
+
+    scales.y2 = {
+      type: 'linear',
+      position: 'right',
+      ticks: { color: active[1].color },
+      grid: { drawOnChartArea: false }
+    };
+
+  } else {
+    // 🔥 3+ → STANDARDNO (kao pre)
+    datasets = all.map(d =>
+      ds(d.label, d.data, d.color, document.getElementById(d.id).checked)
+    );
+
+    scales.y = {
+      ticks: { color: "#555" }
+    };
+  }
+
   chart = new Chart(document.getElementById('chart'), {
     type: 'line',
     data: {
       labels: times,
-      datasets: [
-        ds("Težina1", w1, "#0077b6", document.getElementById("w1").checked),
-        ds("Greška1", e1, "#90caf9", document.getElementById("e1").checked),
-        ds("Težina2", w2, "#ef6c00", document.getElementById("w2").checked),
-        ds("Greška2", e2, "#ba68c8", document.getElementById("e2").checked),
-        ds("Temperatura", temp, "#d32f2f", document.getElementById("temp").checked),
-        ds("Napon", volt, "#2e7d32", document.getElementById("volt").checked)
-      ]
+      datasets
     },
     options: {
       responsive: true,
@@ -174,14 +209,7 @@ function drawChart(times, w1, e1, w2, e2, temp, volt) {
           labels: { color: "#333" }
         }
       },
-      scales: {
-        x: {
-          ticks: { color: "#555", maxTicksLimit: 10 }
-        },
-        y: {
-          ticks: { color: "#555" }
-        }
-      }
+      scales
     }
   });
 }
@@ -191,13 +219,8 @@ document.querySelectorAll("input[type=checkbox]").forEach(cb => {
   cb.addEventListener("change", () => {
     if (!chart) return;
 
-    const ids = ["w1","e1","w2","e2","temp","volt"];
-
-    ids.forEach((id, i) => {
-      chart.data.datasets[i].hidden = !document.getElementById(id).checked;
-    });
-
-    chart.update();
+    // samo ponovo nacrtaj (ključno!)
+    document.getElementById('fileInput').dispatchEvent(new Event('change'));
   });
 });
 </script>
